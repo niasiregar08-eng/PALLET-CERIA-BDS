@@ -1,0 +1,1805 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Book Budaya Lokal Deli Serdang - Palette Ceria 04</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Plus Jakarta Sans & Fredoka -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Plus+Jakarta+Sans:wght@500;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- React 18 & ReactDOM 18 CDNs -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <!-- Babel Standalone for JSX Compilation -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      user-select: none;
+    }
+    h1, h2, h3, h4, .font-heading {
+      font-family: 'Fredoka', cursive, sans-serif;
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 8px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 8px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    .scrollbar-none::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-none {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    /* Print Optimization for Certificate */
+    @media print {
+      body {
+        background: #ffffff !important;
+      }
+      .print\:hidden {
+        display: none !important;
+      }
+      .print\:border-4 {
+        border-width: 4px !important;
+      }
+      .print\:p-6 {
+        padding: 1.5rem !important;
+      }
+      .print\:shadow-none {
+        box-shadow: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-amber-50/80 text-slate-800 min-h-screen pb-12 print:bg-white print:pb-0">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // --- HELPER AUDIO SYNTHESIZER & SOUND FX (Web Audio API) ---
+    let globalAudioCtx = null;
+
+    const getAudioContext = () => {
+      if (!globalAudioCtx && typeof window !== 'undefined') {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          globalAudioCtx = new AudioContextClass();
+        }
+      }
+      if (globalAudioCtx && globalAudioCtx.state === 'suspended') {
+        globalAudioCtx.resume().catch(() => {});
+      }
+      return globalAudioCtx;
+    };
+
+    const playSound = (type) => {
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        const now = ctx.currentTime;
+
+        if (type === 'click' || type === 'tab') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(400, now);
+          osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+          osc.start(now);
+          osc.stop(now + 0.08);
+        } else if (type === 'card') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(300, now);
+          osc.frequency.exponentialRampToValueAtTime(600, now + 0.12);
+          gain.gain.setValueAtTime(0.25, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+          osc.start(now);
+          osc.stop(now + 0.12);
+        } else if (type === 'dice') {
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(220, now);
+          osc.frequency.linearRampToValueAtTime(660, now + 0.2);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+          osc.start(now);
+          osc.stop(now + 0.2);
+        } else if (type === 'correct') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.setValueAtTime(659.25, now + 0.1);
+          osc.frequency.setValueAtTime(783.99, now + 0.2);
+          gain.gain.setValueAtTime(0.25, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+          osc.start(now);
+          osc.stop(now + 0.35);
+        } else if (type === 'wrong') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(320, now);
+          osc.frequency.exponentialRampToValueAtTime(160, now + 0.2);
+          gain.gain.setValueAtTime(0.25, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+          osc.start(now);
+          osc.stop(now + 0.2);
+        } else if (type === 'fanfare') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.setValueAtTime(659.25, now + 0.12);
+          osc.frequency.setValueAtTime(783.99, now + 0.24);
+          osc.frequency.setValueAtTime(1046.5, now + 0.36);
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+          osc.start(now);
+          osc.stop(now + 0.6);
+        } else if (type === 'ladder') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(261.63, now);
+          osc.frequency.linearRampToValueAtTime(880, now + 0.3);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+          osc.start(now);
+          osc.stop(now + 0.3);
+        } else if (type === 'snake') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(880, now);
+          osc.frequency.linearRampToValueAtTime(220, now + 0.3);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+          osc.start(now);
+          osc.stop(now + 0.3);
+        }
+      } catch (e) {
+        console.log('Audio Error:', e);
+      }
+    };
+
+    // --- WEB SPEECH API SYNTHESIS ---
+    const speakText = (text, onStartCallback, onEndCallback) => {
+      if (!('speechSynthesis' in window)) {
+        console.error('Browser tidak mendukung Web Speech API.');
+        return;
+      }
+
+      const synth = window.speechSynthesis;
+      synth.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'id-ID';
+      utterance.rate = 0.95;
+      utterance.pitch = 1.0;
+
+      utterance.onstart = () => {
+        if (onStartCallback) onStartCallback();
+      };
+
+      utterance.onend = () => {
+        if (onEndCallback) onEndCallback();
+      };
+
+      utterance.onerror = (event) => {
+        console.error('Terjadi kesalahan audio:', event.error);
+        if (onEndCallback) onEndCallback();
+      };
+
+      setTimeout(() => {
+        synth.speak(utterance);
+      }, 100);
+    };
+
+    // --- SVG ICON COMPONENT ---
+    const Icon = ({ name, className = "w-5 h-5" }) => {
+      const icons = {
+        BookOpen: <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />,
+        Music: <path d="M9 18V5l12-2v13M9 9l12-2M6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 19a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />,
+        Compass: <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM16.2 7.8l-2.2 6.4-6.4 2.2 2.2-6.4 6.4-2.2z" />,
+        Smile: <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01" />,
+        Layers: <polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 17 12 22 22 17" /><polyline points="2 12 12 17 22 12" />,
+        ShieldCheck: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4" />,
+        Gamepad2: <rect x="2" y="6" width="20" height="12" rx="2" /><path d="M6 12h4M8 10v4M15 11h.01M18 13h.01" />,
+        Award: <circle cx="12" cy="8" r="6" /><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />,
+        Volume2: <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />,
+        Printer: <polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" />,
+        User: <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />,
+        GraduationCap: <path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" />,
+        Star: <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />,
+        Search: <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />,
+        XCircle: <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />,
+        RotateCcw: <polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+      };
+
+      return (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+        >
+          {icons[name] || <circle cx="12" cy="12" r="10" />}
+        </svg>
+      );
+    };
+
+    // --- DATASETS ---
+
+    const ZONES_DATA = [
+      {
+        id: 'pesisir',
+        title: 'Zona 1: Pesisir & Bahari',
+        areas: 'Pantai Cermin, Hamparan Perak, Percut Sei Tuan',
+        culture: 'Kebudayaan Melayu Deli & Serdang',
+        color: 'bg-cyan-400',
+        borderColor: 'border-cyan-800',
+        shadowColor: 'shadow-[0_8px_0_#0e7490]',
+        bgLight: 'bg-cyan-50',
+        badge: '🌊 Pesisir Pantai',
+        desc: 'Wilayah pesisir kaya dengan tradisi nelayan Melayu, tarian Zapin/Serampang Duabelas, pantun, dan keindahan perairan Selat Malaka.',
+        facts: [
+          'Pusat bersejarah Kedatuan Melayu dan Muara Sungai Percut.',
+          'Dikenal dengan hasil laut seperti kepiting bakau, udang galah, dan ikan terubuk.',
+          'Tradisi Jamu Laut diselenggarakan sebagai rasa syukur nelayan pesisir.'
+        ]
+      },
+      {
+        id: 'perkotaan',
+        title: 'Zona 2: Perkotaan & Dataran Rendah',
+        areas: 'Lubuk Pakam (Ibu Kota), Deli Tua, Tanjung Morawa',
+        culture: 'Pusat Pemerintahan & Akulturasi Budaya',
+        color: 'bg-emerald-400',
+        borderColor: 'border-emerald-800',
+        shadowColor: 'shadow-[0_8px_0_#047857]',
+        bgLight: 'bg-emerald-50',
+        badge: '🏙️ Perkotaan Ceria',
+        desc: 'Pusat denyut ekonomi dan administratif Kabupaten Deli Serdang. Rumah bagi keanekaragaman suku yang hidup rukun berpadu.',
+        facts: [
+          'Lubuk Pakam adalah ibu kota kabupaten yang asri dan meraih berbagai penghargaan kebersihan.',
+          'Situs bersejarah Benteng Putri Hijau terdapat di area Deli Tua.',
+          'Sentra kerajinan Anyaman Pandan dan sentra kuliner khas daerah.'
+        ]
+      },
+      {
+        id: 'dataran_tinggi',
+        title: 'Zona 3: Dataran Tinggi & Pegunungan',
+        areas: 'Sibolangit, Gunung Meriah, STM Upper',
+        culture: 'Kebudayaan Karo & Simalungun',
+        color: 'bg-amber-400',
+        borderColor: 'border-amber-800',
+        shadowColor: 'shadow-[0_8px_0_#b45309]',
+        bgLight: 'bg-amber-50',
+        badge: '⛰️ Dataran Tinggi',
+        desc: 'Wilayah pegunungan sejuk yang kaya akan flora cagar alam, air terjun dua warna, serta tradisi adat Karo dan Simalungun.',
+        facts: [
+          'Cagar Alam Sibolangit didirikan sejak era Sumatera Timur sebagai kawasan konservasi megah.',
+          'Rumah adat Siwaluh Jabu Karo dan Rumah Bolon Simalungun bernilai arsitektur tinggi.',
+          'Penghasil buah segar, sayuran hijau, dan kopi khas tanah tinggi.'
+        ]
+      }
+    ];
+
+    const DICTIONARY_DATA = {
+      melayu: {
+        cultureName: 'Melayu Deli & Serdang',
+        icon: '🌴',
+        color: 'bg-amber-100 border-amber-500',
+        family: [
+          { title: 'Ayah / Bapak', term: 'Ayah / Abah', note: 'Penghormatan untuk orang tua laki-laki' },
+          { title: 'Ibu / Mamak', term: 'Mak / Mak Wo', note: 'Penghormatan untuk ibu/mak tua' },
+          { title: 'Kakak / Abang', term: 'Abang / Kakak', note: 'Sapaan saudara tua' },
+          { title: 'Adik', term: 'Adik / Yong', note: 'Saudara yang lebih muda' },
+          { title: 'Paman', term: 'Pak Long / Pak Cik', note: 'Saudara laki-laki orang tua' },
+          { title: 'Bibi', term: 'Mak Long / Mak Cik', note: 'Saudara perempuan orang tua' }
+        ],
+        greetings: [
+          { id: 1, phrase: 'Selamat Pagi', local: 'Selamat Pagi, Apo Kabar?', meaning: 'Selamat pagi, apa kabar?' },
+          { id: 2, phrase: 'Terima Kasih', local: 'Terima Kasih Banyak-banyak', meaning: 'Ungkapan rasa syukur dan terima kasih' },
+          { id: 3, phrase: 'Sama-sama', local: 'Sama-sama, Selesa Selalu', meaning: 'Jawaban atas ucapan terima kasih' },
+          { id: 4, phrase: 'Silakan Masuk', local: 'Jemput Masuk Kak/Abang', meaning: 'Menjemput tamu dengan ramah' },
+          { id: 5, phrase: 'Permisi / Maaf', local: 'Minta Maaf, Tumpang Tanya', meaning: 'Sapaan santun saat bertanya' },
+          { id: 6, phrase: 'Sampai Jumpa', local: 'Jumpa Lagi Besok Ya', meaning: 'Perpisahan hangat' }
+        ]
+      },
+      karo: {
+        cultureName: 'Suku Karo (Sibolangit)',
+        icon: '🏔️',
+        color: 'bg-rose-100 border-rose-500',
+        family: [
+          { title: 'Ayah', term: 'Bapa', note: 'Sebutan untuk ayah kandung' },
+          { title: 'Ibu', term: 'Nande', note: 'Sebutan untuk ibu tercinta' },
+          { title: 'Saudara Laki-laki', term: 'Senina / Impal', note: 'Panggilan kekerabatan erat' },
+          { title: 'Saudara Perempuan', term: 'Turang', note: 'Sebutan hormat saudara wanita' },
+          { title: 'Paman (Dari Ibu)', term: 'Kalimbubu / Mama', note: 'Pihak pemberi dara yang dihormati' },
+          { title: 'Bibi', term: 'Bibi / Mami', note: 'Istri dari mama / bibi' }
+        ],
+        greetings: [
+          { id: 1, phrase: 'Hallo / Salam', local: 'Mejuah-juah kita kerina!', meaning: 'Salam sejahtera & sehat untuk kita semua' },
+          { id: 2, phrase: 'Terima Kasih', local: 'Bujur Melala', meaning: 'Terima kasih banyak atas kebaikannya' },
+          { id: 3, phrase: 'Apa Kabar?', local: 'Kuga Berita?', meaning: 'Menanyakan kabar kondisi kawan' },
+          { id: 4, phrase: 'Kabar Baik', local: 'Bujur, Sehat-sehat Mejuah-juah', meaning: 'Kabar baik dan sehat selalu' },
+          { id: 5, phrase: 'Silakan Duduk', local: 'Mari Kundul Kita', meaning: 'Ajakan duduk bersama santai' },
+          { id: 6, phrase: 'Mari Makan', local: 'Mari Kita Man', meaning: 'Ajakan makan khas Karo' }
+        ]
+      },
+      simalungun: {
+        cultureName: 'Suku Simalungun (Gunung Meriah)',
+        icon: '🌾',
+        color: 'bg-emerald-100 border-emerald-500',
+        family: [
+          { title: 'Ayah', term: 'Bapa / Bapa Tua', note: 'Panggilan penghormatan untuk ayah' },
+          { title: 'Ibu', term: 'Inang / Inang Soripada', note: 'Panggilan mulia untuk ibu' },
+          { title: 'Saudara Laki-laki', term: 'Sanina', note: 'Saudara se-darah' },
+          { title: 'Saudara Perempuan', term: 'Botou', note: 'Panggilan akrab saudara perempuan' },
+          { title: 'Paman', term: 'Tulang', note: 'Saudara laki-laki ibu' },
+          { title: 'Bibi', term: 'Antua', note: 'Saudara perempuan ayah' }
+        ],
+        greetings: [
+          { id: 1, phrase: 'Salam Khas', local: 'Horas Habonaron Do Bona!', meaning: 'Salam kebenaran dan ketulusan hati' },
+          { id: 2, phrase: 'Terima Kasih', local: 'Diatei Tupa', meaning: 'Terima kasih mendalam' },
+          { id: 3, phrase: 'Apa Kabar?', local: 'Aha Barita?', meaning: 'Tanya kabar kerabat' },
+          { id: 4, phrase: 'Kabar Baik', local: 'Barita Madear / Sehat', meaning: 'Kabar sangat baik' },
+          { id: 5, phrase: 'Silakan Singgah', local: 'Singgah Min Rumahta', meaning: 'Mengundang masuk ke rumah' },
+          { id: 6, phrase: 'Mari Makan', local: 'Riap Kita Mangan', meaning: 'Ajakan makan bersama' }
+        ]
+      }
+    };
+
+    const ENCYCLOPEDIA_DATA = [
+      {
+        id: 'anyang-melayu',
+        category: 'kuliner',
+        title: 'Anyang Melayu Deli',
+        subtitle: 'Kuliner Khas Pesisir',
+        badge: '🥗 Urap Segar Khas',
+        image: '🥗',
+        shortDesc: 'Makanan mirip urap berbahan daun pakis, tauge, dan parutan kelapa sangrai berempah khas Melayu.',
+        origin: 'Melayu Deli & Serdang',
+        story: 'Anyang Melayu merupakan hidangan istimewa yang wajib ada saat kenduri dan acara adat Melayu. Dibuat dari pakis rebus yang dicampur kelapa gongseng dengan perasan jeruk nipis, bawang merah, dan cabai rawit.'
+      },
+      {
+        id: 'cimpa-karo',
+        category: 'kuliner',
+        title: 'Cimpa Unung-Unung',
+        subtitle: 'Kue Adat Suku Karo',
+        badge: '🍃 Berbungkus Daun Singkut',
+        image: '🍌',
+        shortDesc: 'Kue dari tepung ketan berisi gula merah dan kelapa parut, dibungkus daun singkut aromatik.',
+        origin: 'Karo (Sibolangit)',
+        story: 'Cimpa adalah makanan wajib pada pesta adat Kerja Tahun di Sibolangit. Kehadiran Cimpa melambangkan kebersamaan dan kehangatan persaudaraan keluarga Karo.'
+      },
+      {
+        id: 'dayok-nabinatur',
+        category: 'kuliner',
+        title: 'Dayok Nabinatur',
+        subtitle: 'Olahan Ayam Ritual Simalungun',
+        badge: '🍗 Keharmonisan Hidup',
+        image: '🍲',
+        shortDesc: 'Ayam yang dimasak dengan bumbu khas dan diatur rapi sesuai susunan anatomi tubuhnya.',
+        origin: 'Simalungun',
+        story: 'Dayok Nabinatur memiliki makna mendalam "Nabinatur" yang berarti diatur teratur. Kuliner ini disajikan untuk mendoakan agar hidup penerimanya senantiasa sukses dan penuh berkah.'
+      },
+      {
+        id: 'gambus-melayu',
+        category: 'alat_musik',
+        title: 'Gambus Melayu',
+        subtitle: 'Alat Musik Petik Pesisir',
+        badge: '🪕 Melodi Pesisir',
+        image: '🪕',
+        shortDesc: 'Alat musik petik dawai khas Melayu yang mengiringi tarian Zapin dan nyanyian Ghazal.',
+        origin: 'Melayu Deli',
+        story: 'Gambus dimainkan dengan irama mendayu-dayu nan rancak. Dahulu digunakan oleh pedagang pesisir untuk hiburan sore hari setelah berlayar di Selat Malaka.'
+      },
+      {
+        id: 'kulcapi-karo',
+        category: 'alat_musik',
+        title: 'Kulcapi Karo',
+        subtitle: 'Kecapi Dua Tali',
+        badge: '🎵 Alat Musik Petik',
+        image: '🎸',
+        shortDesc: 'Alat musik petik tradisional Karo berbahan kayu keras dengan dua dawai suara nyaring.',
+        origin: 'Karo',
+        story: 'Kulcapi sering dimainkan dalam Ansambel Gendang Karo untuk mengiringi tarian Landek. Suaranya menggambarkan ketangkasan masyarakat Karo.'
+      },
+      {
+        id: 'teluk-belanga',
+        category: 'pakaian_adat',
+        title: 'Baju Teluk Belanga & Tanjak',
+        subtitle: 'Pakaian Adat Melayu',
+        badge: '👑 Elegansi Pesisir',
+        image: '🥋',
+        shortDesc: 'Setelan baju kurung dengan samping kain songket tenun dan mahkota Tanjak di kepala.',
+        origin: 'Melayu Deli & Serdang',
+        story: 'Warna kuning keemasan melambangkan keagungan raja-raja Melayu. Tanjak di kepala melambangkan kewibawaan dan kesantunan berbudi pekerti.'
+      },
+      {
+        id: 'kerja-tahun',
+        category: 'tradisi',
+        title: 'Pesta Adat Kerja Tahun',
+        subtitle: 'Syukuran Panen Raya Karo',
+        badge: '🌾 Pesta Budaya',
+        image: '🎉',
+        shortDesc: 'Pesta adat rasa syukur atas hasil panen melimpah di wilayah Sibolangit dan sekitarnya.',
+        origin: 'Karo',
+        story: 'Kerja Tahun dirayakan bersama seluruh keluarga besar dengan menyajikan kue Cimpa, menari Landek, dan bersilaturahmi mempererat kebersamaan.'
+      }
+    ];
+
+    const LKPD_MATCHING = [
+      { id: 1, greeting: 'Mejuah-juah kita kerina!', correctSuku: 'Karo' },
+      { id: 2, greeting: 'Horas Habonaron Do Bona!', correctSuku: 'Simalungun' },
+      { id: 3, greeting: 'Selamat Pagi, Apo Kabar?', correctSuku: 'Melayu' },
+      { id: 4, greeting: 'Bujur Melala!', correctSuku: 'Karo' },
+      { id: 5, greeting: 'Diatei Tupa!', correctSuku: 'Simalungun' }
+    ];
+
+    const LKPD_QUIZ = [
+      {
+        q: '1. Ibu kota Kabupaten Deli Serdang berada di daerah...',
+        options: ['Sibolangit', 'Lubuk Pakam', 'Pantai Cermin', 'Gunung Meriah'],
+        answer: 1,
+        explain: 'Lubuk Pakam adalah pusat pemerintahan dan ibu kota Kabupaten Deli Serdang.'
+      },
+      {
+        q: '2. Makanan khas Melayu Deli berbentuk urap daun pakis dengan kelapa sangrai adalah...',
+        options: ['Cimpa', 'Anyang Melayu', 'Dayok Nabinatur', 'Lemang'],
+        answer: 1,
+        explain: 'Anyang Melayu adalah kuliner mirip urap khas Melayu Deli yang terbuat dari pakis dan kelapa gongseng.'
+      },
+      {
+        q: '3. Salam hangat masyarakat Suku Karo yang bermakna kesehatan dan keselamatan adalah...',
+        options: ['Horas', 'Mejuah-juah', 'Apo Kabar', 'Diatei Tupa'],
+        answer: 1,
+        explain: 'Mejuah-juah merupakan salam khas Suku Karo yang mengandung doa keselamatan bersama.'
+      },
+      {
+        q: '4. Alat musik petik dua dawai khas masyarakat Suku Karo disebut...',
+        options: ['Kulcapi', 'Gambus', 'Gendang', 'Seruling'],
+        answer: 0,
+        explain: 'Kulcapi adalah alat musik petik khas Karo dengan dua dawai.'
+      },
+      {
+        q: '5. Penutup kepala khas laki-laki Melayu Deli yang melambangkan kewibawaan adalah...',
+        options: ['Sertali', 'Tanjak', 'Uis Gara', 'Kopiah'],
+        answer: 1,
+        explain: 'Tanjak adalah hiasan mahkota kain ikat kepala pria Melayu.'
+      }
+    ];
+
+    const WORD_SEARCH_GRID = [
+      ['M', 'E', 'L', 'A', 'Y', 'U', 'X', 'B'],
+      ['K', 'A', 'R', 'O', 'P', 'Q', 'W', 'U'],
+      ['S', 'O', 'N', 'G', 'K', 'E', 'T', 'D'],
+      ['S', 'E', 'R', 'D', 'A', 'N', 'G', 'A'],
+      ['C', 'I', 'M', 'P', 'A', 'Y', 'A', 'Y'],
+      ['G', 'A', 'M', 'B', 'U', 'S', 'D', 'A'],
+      ['P', 'A', 'K', 'A', 'M', 'O', 'G', 'K'],
+      ['S', 'I', 'B', 'O', 'L', 'A', 'N', 'G']
+    ];
+
+    const TARGET_WORDS = ['MELAYU', 'KARO', 'SERDANG', 'GAMBUS', 'CIMPA', 'SONGKET'];
+
+    const DICE_GAME_TILES_10 = [
+      { id: 1, title: 'Petak 1: Muara Pesisir', question: 'Pantai Cermin terletak di Zona mana?', options: ['Pesisir & Bahari', 'Dataran Tinggi'], ans: 0 },
+      { id: 2, title: 'Petak 2: Tanjak Melayu', question: 'Tanjak dipakai di bagian tubuh mana?', options: ['Kepala', 'Kaki'], ans: 0 },
+      { id: 3, title: 'Petak 3: Musik Gambus', question: 'Gambus dimainkan dengan cara apa?', options: ['Dipetik', 'Ditiup'], ans: 0 },
+      { id: 4, title: 'Petak 4: Ibu Kota', question: 'Apa nama ibu kota Kabupaten Deli Serdang?', options: ['Lubuk Pakam', 'Medan'], ans: 0 },
+      { id: 5, title: 'Petak 5: Taman Sibolangit', question: 'Sibolangit memiliki udara yang...?', options: ['Sejuk & Segar', 'Panas Terik'], ans: 0 },
+      { id: 6, title: 'Petak 6: Kue Cimpa', question: 'Kue Cimpa dibungkus dengan daun apa?', options: ['Daun Singkut', 'Daun Jati'], ans: 0 },
+      { id: 7, title: 'Petak 7: Dayok Nabinatur', question: 'Dayok Nabinatur berasal dari tradisi suku...?', options: ['Simalungun', 'Melayu'], ans: 0 },
+      { id: 8, title: 'Petak 8: Benteng Putri Hijau', question: 'Situs Benteng Putri Hijau terletak di...?', options: ['Deli Tua', 'Pantai Cermin'], ans: 0 },
+      { id: 9, title: 'Petak 9: Tarian Zapin', question: 'Tari Serampang Duabelas ditarikan secara...?', options: ['Berpasangan', 'Sendirian'], ans: 0 },
+      { id: 10, title: 'Petak 10: Puncak Duta Budaya', question: 'Semboyan Deli Serdang adalah...?', options: ['Bhinneka Perkasa Jaya', 'Tut Wuri Handayani'], ans: 0 }
+    ];
+
+    const LIRIK_MARS = [
+      "Bersatu kita raih cita-cita",
+      "Membangun Deli Serdang tercinta",
+      "Kuatkan semangat berjaya",
+      "Demi menggapai asa mulia",
+      "",
+      "Deli Serdang maju dan sejahtera",
+      "Itulah visi kabupaten kita",
+      "Dengan Bhinneka Perkasa Jaya",
+      "Membangun semangat berkarya",
+      "",
+      "[Reff]",
+      "Beragam agama, etnis dan budaya",
+      "Bersatu padu bergandengan tangan",
+      "Masyarakat religius dan bertakwa",
+      "Rukun damai dalam kebhinekaan",
+      "",
+      "Majulah majulah maju, wahai Deli Serdangku",
+      "Ayo maju bersama kita bersatu",
+      "Majulah majulah maju, Deli Serdang tercinta",
+      "Masyarakat yang berakhlak mulia",
+      "",
+      "Semoga Deli Serdang tetap jaya",
+      "Dalam ridho dan rahmat Tuhan Yang Maha Esa"
+    ];
+
+    // --- MAIN APP COMPONENT ---
+
+    function App() {
+      const [activeTab, setActiveTab] = useState('home');
+      const [studentName, setStudentName] = useState('Aditya Pratama');
+      const [studentClass, setStudentClass] = useState('Kelas IV-A');
+      const [schoolName, setSchoolName] = useState('SD Negeri 101 Lubuk Pakam');
+      const [score, setScore] = useState(100);
+
+      const [isSpeaking, setIsSpeaking] = useState(false);
+      const [mascotSpeech, setMascotSpeech] = useState(
+        'Halo! Aku Si Deli dan Si Serdang. Pilih menu untuk belajar budaya Deli Serdang!'
+      );
+
+      const [selectedCulture, setSelectedCulture] = useState('melayu');
+      const [selectedZone, setSelectedZone] = useState(ZONES_DATA[0]);
+      const [selectedEncyclopedia, setSelectedEncyclopedia] = useState(null);
+      const [searchQuery, setSearchQuery] = useState('');
+      const [encCategoryFilter, setEncCategoryFilter] = useState('semua');
+
+      // LKPD States
+      const [selectedMatchingItem, setSelectedMatchingItem] = useState(null);
+      const [matchingAnswers, setMatchingAnswers] = useState({});
+      const [matchingFeedback, setMatchingFeedback] = useState(null);
+      const [quizAnswers, setQuizAnswers] = useState({});
+      const [quizScore, setQuizScore] = useState(null);
+      const [selectedCells, setSelectedCells] = useState([]);
+      const [foundWords, setFoundWords] = useState([]);
+
+      // Dadu Game State (10-Petak)
+      const [dicePos, setDicePos] = useState(1);
+      const [diceVal, setDiceVal] = useState(1);
+      const [isRolling, setIsRolling] = useState(false);
+      const [activeTrivia, setActiveTrivia] = useState(null);
+
+      // Snake Ladder State (2 Players)
+      const [p1Pos, setP1Pos] = useState(1);
+      const [p2Pos, setP2Pos] = useState(1);
+      const [turn, setTurn] = useState(1);
+      const [snakeLog, setSnakeLog] = useState('Permainan Ular Tangga Siap Dimulai!');
+
+      // Audio Context Lazy Unlock
+      useEffect(() => {
+        const handleFirstInteraction = () => {
+          getAudioContext();
+          window.removeEventListener('click', handleFirstInteraction);
+          window.removeEventListener('touchstart', handleFirstInteraction);
+        };
+        window.addEventListener('click', handleFirstInteraction);
+        window.addEventListener('touchstart', handleFirstInteraction);
+        return () => {
+          window.removeEventListener('click', handleFirstInteraction);
+          window.removeEventListener('touchstart', handleFirstInteraction);
+        };
+      }, []);
+
+      const handleSpeech = (text) => {
+        setMascotSpeech(text);
+        speakText(
+          text,
+          () => setIsSpeaking(true),
+          () => setIsSpeaking(false)
+        );
+      };
+
+      const handleTabChange = (tabId) => {
+        playSound('tab');
+        setActiveTab(tabId);
+        let speech = '';
+        if (tabId === 'home') speech = 'Halaman Beranda Smart Book Digital';
+        if (tabId === 'mars') speech = 'Pemutar Musik Video Mars Deli Serdang';
+        if (tabId === 'peta') speech = 'Peta 3 Zona Geografis Deli Serdang';
+        if (tabId === 'kamus') speech = 'Kamus Sapaan 3 Suku Usul';
+        if (tabId === 'ensiklopedia') speech = 'Ensiklopedia Budaya Lokal';
+        if (tabId === 'lkpd') speech = 'Lembar Kerja Siswa Interaktif';
+        if (tabId === 'games') speech = 'Arena Games Dadu dan Ular Tangga Budaya';
+        if (tabId === 'rapor') speech = 'Sertifikat Duta Budaya Cilik';
+        handleSpeech(speech);
+      };
+
+      // --- GAME LOGIC: DADU TRIVIA (10 PETAK) ---
+      const handleRollDice = () => {
+        if (isRolling) return;
+        playSound('dice');
+        setIsRolling(true);
+        let count = 0;
+        const interval = setInterval(() => {
+          const rand = Math.floor(Math.random() * 4) + 1;
+          setDiceVal(rand);
+          count++;
+          if (count >= 8) {
+            clearInterval(interval);
+            setIsRolling(false);
+            const newPos = Math.min(10, dicePos + rand);
+            setDicePos(newPos);
+            playSound('correct');
+            const tileData = DICE_GAME_TILES_10.find((t) => t.id === newPos);
+            if (tileData) {
+              setActiveTrivia(tileData);
+              handleSpeech(`Pertanyaan Petak ${newPos}: ${tileData.question}`);
+            }
+          }
+        }, 80);
+      };
+
+      const handleAnswerTrivia = (optionIdx) => {
+        if (!activeTrivia) return;
+        if (optionIdx === activeTrivia.ans) {
+          playSound('correct');
+          setScore((prev) => prev + 10);
+          handleSpeech('Jawaban Kamu Tepat Sekali! Kamu Mendapatkan +10 Poin.');
+        } else {
+          playSound('wrong');
+          handleSpeech('Aduh, jawaban belum tepat. Mari coba lagi!');
+        }
+        setActiveTrivia(null);
+      };
+
+      // --- GAME LOGIC: ULAR TANGGA ---
+      const handleRollSnake = () => {
+        playSound('dice');
+        const roll = Math.floor(Math.random() * 6) + 1;
+        let currentPos = turn === 1 ? p1Pos : p2Pos;
+        let nextPos = Math.min(25, currentPos + roll);
+
+        let eventText = `Pemain ${turn === 1 ? 'Si Deli (Biru)' : 'Si Serdang (Kuning)'} mendapat angka ${roll}.`;
+
+        if (nextPos === 3) {
+          nextPos = 11;
+          playSound('ladder');
+          eventText += ' Naik tangga Pengetahuan Pesisir ke petak 11!';
+        } else if (nextPos === 8) {
+          nextPos = 16;
+          playSound('ladder');
+          eventText += ' Naik tangga Budaya Karo ke petak 16!';
+        } else if (nextPos === 15) {
+          nextPos = 22;
+          playSound('ladder');
+          eventText += ' Naik tangga Simalungun ke petak 22!';
+        } else if (nextPos === 14) {
+          nextPos = 6;
+          playSound('snake');
+          eventText += ' Terpeleset Ular Lupa Salam turun ke petak 6!';
+        } else if (nextPos === 19) {
+          nextPos = 9;
+          playSound('snake');
+          eventText += ' Terpeleset Ular Merusak Situs turun ke petak 9!';
+        } else if (nextPos === 24) {
+          nextPos = 12;
+          playSound('snake');
+          eventText += ' Terpeleset Ular Kurang Sopan turun ke petak 12!';
+        }
+
+        if (turn === 1) {
+          setP1Pos(nextPos);
+          if (nextPos >= 25) {
+            playSound('fanfare');
+            setSnakeLog('🎉 Hore! Si Deli (Pemain 1) Menang Mewakili Duta Budaya!');
+            handleSpeech('Selamat Si Deli memenangkan permainan Ular Tangga!');
+            return;
+          }
+          setTurn(2);
+        } else {
+          setP2Pos(nextPos);
+          if (nextPos >= 25) {
+            playSound('fanfare');
+            setSnakeLog('🎉 Hore! Si Serdang (Pemain 2) Menang Mewakili Duta Budaya!');
+            handleSpeech('Selamat Si Serdang memenangkan permainan Ular Tangga!');
+            return;
+          }
+          setTurn(1);
+        }
+
+        setSnakeLog(eventText);
+        handleSpeech(eventText);
+      };
+
+      const resetSnakeGame = () => {
+        playSound('click');
+        setP1Pos(1);
+        setP2Pos(1);
+        setTurn(1);
+        setSnakeLog('Permainan diulang. Si Deli memulai duluan!');
+      };
+
+      // --- LKPD WORD SEARCH HANDLER ---
+      const handleCellClick = (r, c) => {
+        playSound('click');
+        const cellKey = `${r}-${c}`;
+        if (selectedCells.includes(cellKey)) {
+          setSelectedCells(selectedCells.filter((k) => k !== cellKey));
+        } else {
+          const newSelected = [...selectedCells, cellKey];
+          setSelectedCells(newSelected);
+
+          const spelledWord = newSelected
+            .map((k) => {
+              const [row, col] = k.split('-').map(Number);
+              return WORD_SEARCH_GRID[row][col];
+            })
+            .join('');
+
+          TARGET_WORDS.forEach((target) => {
+            if (!foundWords.includes(target) && (spelledWord === target || spelledWord === target.split('').reverse().join(''))) {
+              playSound('correct');
+              setFoundWords([...foundWords, target]);
+              setScore((prev) => prev + 15);
+              handleSpeech(`Hebat! Kamu menemukan kata ${target}!`);
+            }
+          });
+        }
+      };
+
+      // --- LKPD MATCHING HANDLER ---
+      const handleMatchingSelect = (item) => {
+        playSound('click');
+        setSelectedMatchingItem(item);
+      };
+
+      const handleMatchingTarget = (suku) => {
+        if (!selectedMatchingItem) return;
+        const isCorrect = selectedMatchingItem.correctSuku === suku;
+        if (isCorrect) {
+          playSound('correct');
+          setMatchingAnswers({ ...matchingAnswers, [selectedMatchingItem.id]: suku });
+          setMatchingFeedback('Jawaban Tepat!');
+          setScore((prev) => prev + 10);
+        } else {
+          playSound('wrong');
+          setMatchingFeedback('Belum Tepat, Coba Lagi!');
+        }
+        setSelectedMatchingItem(null);
+      };
+
+      // --- LKPD QUIZ SUBMIT ---
+      const handleQuizSubmit = () => {
+        let correctCount = 0;
+        LKPD_QUIZ.forEach((item, idx) => {
+          if (quizAnswers[idx] === item.answer) {
+            correctCount++;
+          }
+        });
+        const finalCalculatedScore = Math.round((correctCount / LKPD_QUIZ.length) * 100);
+        setQuizScore(finalCalculatedScore);
+        if (finalCalculatedScore >= 80) {
+          playSound('fanfare');
+          handleSpeech(`Selamat! Nilai Quiz LKPD Kamu Sangat Bagus: ${finalCalculatedScore}`);
+        } else {
+          playSound('wrong');
+          handleSpeech(`Nilai Quiz Kamu: ${finalCalculatedScore}. Pelajari lagi materinya ya!`);
+        }
+      };
+
+      // Filtered Encyclopedia
+      const filteredEncyclopedia = ENCYCLOPEDIA_DATA.filter((item) => {
+        const matchesCategory = encCategoryFilter === 'semua' || item.category === encCategoryFilter;
+        const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                              item.origin.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesCategory && matchesSearch;
+      });
+
+      return (
+        <div className="min-h-screen bg-amber-50/70 text-slate-800 font-sans pb-12 print:bg-white print:pb-0">
+          {/* HEADER UTAMA & PROFIL SISWA */}
+          <header className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white p-4 md:p-6 border-b-4 border-slate-800 shadow-md print:hidden">
+            <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-14 h-14 bg-amber-400 rounded-2xl border-3 border-slate-800 shadow-[0_4px_0_#1e293b] flex items-center justify-center text-3xl font-black text-slate-800 transform -rotate-3">
+                  📖
+                </div>
+                <div>
+                  <span className="bg-amber-300 text-slate-900 text-xs font-extrabold px-3 py-1 rounded-full border-2 border-slate-800 uppercase tracking-wide">
+                    PALETTE CERIA 04
+                  </span>
+                  <h1 className="text-xl md:text-3xl font-black text-slate-900 drop-shadow-sm mt-1">
+                    Smart Book Budaya Lokal Deli Serdang
+                  </h1>
+                </div>
+              </div>
+
+              {/* Profil Input Panel */}
+              <div className="flex flex-wrap items-center gap-2 bg-white/95 text-slate-800 p-2 md:p-3 rounded-2xl border-3 border-slate-800 shadow-[0_4px_0_#1e293b]">
+                <div className="flex items-center gap-1">
+                  <Icon name="User" className="w-4 h-4 text-emerald-600" />
+                  <input
+                    type="text"
+                    value={studentName}
+                    onChange={(e) => setStudentName(e.target.value)}
+                    className="font-bold text-xs md:text-sm bg-slate-100 px-2 py-1 rounded-lg border-2 border-slate-400 w-32 md:w-36 focus:outline-none focus:border-emerald-600"
+                    placeholder="Nama Siswa"
+                  />
+                </div>
+                <div className="flex items-center gap-1">
+                  <Icon name="GraduationCap" className="w-4 h-4 text-cyan-600" />
+                  <input
+                    type="text"
+                    value={studentClass}
+                    onChange={(e) => setStudentClass(e.target.value)}
+                    className="font-bold text-xs md:text-sm bg-slate-100 px-2 py-1 rounded-lg border-2 border-slate-400 w-24 focus:outline-none focus:border-cyan-600"
+                    placeholder="Kelas"
+                  />
+                </div>
+                <div className="flex items-center gap-1 bg-amber-200 px-3 py-1 rounded-xl border-2 border-slate-800 font-black text-xs md:text-sm text-slate-900">
+                  <Icon name="Star" className="w-4 h-4 text-amber-600 fill-amber-500" />
+                  <span>{score} Poin</span>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          {/* MASKOT SI DELI & SI SERDANG */}
+          <div className="max-w-6xl mx-auto px-4 mt-4 print:hidden">
+            <div className="bg-white border-4 border-slate-800 rounded-3xl p-4 shadow-[0_6px_0_#1e293b] flex flex-col md:flex-row items-center gap-4">
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="w-12 h-12 bg-rose-400 rounded-full border-3 border-slate-800 flex items-center justify-center text-2xl shadow-sm">
+                  👦🏻
+                </div>
+                <div className="w-12 h-12 bg-cyan-400 rounded-full border-3 border-slate-800 flex items-center justify-center text-2xl shadow-sm">
+                  👧🏽
+                </div>
+                <div className="text-left">
+                  <p className="font-black text-xs text-slate-500 uppercase tracking-wider">Maskot Edukasi</p>
+                  <p className="font-extrabold text-sm text-slate-800">Si Deli & Si Serdang</p>
+                </div>
+              </div>
+
+              <div className="flex-1 bg-amber-50 border-2 border-slate-800 rounded-2xl p-3 relative flex items-center justify-between gap-3 w-full">
+                <p className="text-xs md:text-sm font-bold text-slate-700 italic">
+                  "{mascotSpeech}"
+                </p>
+                <button
+                  onClick={() => handleSpeech(mascotSpeech)}
+                  className={`p-2 rounded-xl border-2 border-slate-800 text-slate-900 font-bold transition-transform active:scale-95 shrink-0 flex items-center gap-1 ${
+                    isSpeaking ? 'bg-rose-400 animate-pulse' : 'bg-amber-300 hover:bg-amber-400'
+                  }`}
+                  title="Putar Suara Sintesis"
+                >
+                  <Icon name="Volume2" className="w-5 h-5" />
+                  <span className="text-xs hidden sm:inline">{isSpeaking ? 'Bicara...' : 'Ulang Suara'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* NAVIGASI MENU UTAMA (8 TAB INTERAKTIF) */}
+          <nav className="max-w-6xl mx-auto px-4 mt-4 print:hidden">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+              {[
+                { id: 'home', label: 'Beranda', icon: 'BookOpen', color: 'bg-emerald-400' },
+                { id: 'mars', label: 'Mars Deli', icon: 'Music', color: 'bg-rose-400' },
+                { id: 'peta', label: 'Peta 3 Zona', icon: 'Compass', color: 'bg-cyan-400' },
+                { id: 'kamus', label: 'Kamus 3 Suku', icon: 'Smile', color: 'bg-amber-400' },
+                { id: 'ensiklopedia', label: 'Ensiklopedia', icon: 'Layers', color: 'bg-purple-400' },
+                { id: 'lkpd', label: 'LKPD Siswa', icon: 'ShieldCheck', color: 'bg-orange-400' },
+                { id: 'games', label: 'Arena Games', icon: 'Gamepad2', color: 'bg-indigo-400' },
+                { id: 'rapor', label: 'Sertifikat', icon: 'Award', color: 'bg-yellow-400' }
+              ].map((tab) => {
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleTabChange(tab.id)}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl font-black text-xs md:text-sm whitespace-nowrap border-3 border-slate-800 transition-all ${
+                      isActive
+                        ? `${tab.color} text-slate-900 shadow-[0_4px_0_#1e293b] -translate-y-1`
+                        : 'bg-white text-slate-700 hover:bg-slate-100 shadow-sm'
+                    }`}
+                  >
+                    <Icon name={tab.icon} className="w-4 h-4" />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
+
+          {/* CONTENT REGION CONTAINER */}
+          <main className="max-w-6xl mx-auto px-4 mt-4">
+            {/* TAB 1: BERANDA */}
+            {activeTab === 'home' && (
+              <div className="space-y-6">
+                <div className="bg-gradient-to-br from-amber-300 via-orange-300 to-rose-300 border-4 border-slate-800 rounded-3xl p-6 md:p-8 shadow-[0_8px_0_#1e293b]">
+                  <div className="max-w-2xl">
+                    <span className="bg-white border-2 border-slate-800 font-extrabold text-xs px-3 py-1 rounded-full text-slate-900 uppercase">
+                      Selamat Datang Duta Budaya Cilik
+                    </span>
+                    <h2 className="text-2xl md:text-4xl font-black text-slate-900 mt-2 leading-tight">
+                      Jelajahi Kekayaan Tradisi & Budaya Lokal Kabupaten Deli Serdang
+                    </h2>
+                    <p className="mt-3 text-sm md:text-base font-bold text-slate-800 leading-relaxed">
+                      Buku digital interaktif berbasis kearifan lokal. Mari belajar sapaan adat, zona geografis, lagu daerah, kuliner tradisional, dan uji kemampuanmu di arena gim edukatif!
+                    </p>
+                    <div className="mt-6 flex flex-wrap gap-3">
+                      <button
+                        onClick={() => handleTabChange('peta')}
+                        className="bg-emerald-400 hover:bg-emerald-500 text-slate-900 border-3 border-slate-800 px-5 py-3 rounded-2xl font-black text-sm shadow-[0_4px_0_#1e293b] active:translate-y-1 active:shadow-none flex items-center gap-2"
+                      >
+                        <Icon name="Compass" className="w-5 h-5" />
+                        <span>Mulai Jelajah Peta Zona</span>
+                      </button>
+                      <button
+                        onClick={() => handleTabChange('games')}
+                        className="bg-indigo-400 hover:bg-indigo-500 text-slate-900 border-3 border-slate-800 px-5 py-3 rounded-2xl font-black text-sm shadow-[0_4px_0_#1e293b] active:translate-y-1 active:shadow-none flex items-center gap-2"
+                      >
+                        <Icon name="Gamepad2" className="w-5 h-5" />
+                        <span>Main Games Ular Tangga</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* QUICK STATS & FEATURES */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div
+                    onClick={() => handleTabChange('peta')}
+                    className="bg-cyan-100 hover:bg-cyan-200 border-4 border-slate-800 p-5 rounded-3xl shadow-[0_6px_0_#1e293b] cursor-pointer transition-transform hover:-translate-y-1"
+                  >
+                    <div className="w-12 h-12 bg-cyan-400 border-2 border-slate-800 rounded-2xl flex items-center justify-center text-2xl font-black mb-3">
+                      🗺️
+                    </div>
+                    <h3 className="font-black text-lg text-slate-900">3 Zona Geografis</h3>
+                    <p className="text-xs font-bold text-slate-700 mt-1">
+                      Pesisir Bahari, Perkotaan Dataran Rendah, dan Dataran Tinggi Pegunungan Sibolangit.
+                    </p>
+                  </div>
+
+                  <div
+                    onClick={() => handleTabChange('kamus')}
+                    className="bg-amber-100 hover:bg-amber-200 border-4 border-slate-800 p-5 rounded-3xl shadow-[0_6px_0_#1e293b] cursor-pointer transition-transform hover:-translate-y-1"
+                  >
+                    <div className="w-12 h-12 bg-amber-400 border-2 border-slate-800 rounded-2xl flex items-center justify-center text-2xl font-black mb-3">
+                      🗣️
+                    </div>
+                    <h3 className="font-black text-lg text-slate-900">Kamus 3 Suku</h3>
+                    <p className="text-xs font-bold text-slate-700 mt-1">
+                      Bahasa Melayu Deli, Suku Karo, dan Simalungun dilengkapi pengucapan audio langsung.
+                    </p>
+                  </div>
+
+                  <div
+                    onClick={() => handleTabChange('lkpd')}
+                    className="bg-rose-100 hover:bg-rose-200 border-4 border-slate-800 p-5 rounded-3xl shadow-[0_6px_0_#1e293b] cursor-pointer transition-transform hover:-translate-y-1"
+                  >
+                    <div className="w-12 h-12 bg-rose-400 border-2 border-slate-800 rounded-2xl flex items-center justify-center text-2xl font-black mb-3">
+                      📝
+                    </div>
+                    <h3 className="font-black text-lg text-slate-900">LKPD & Sertifikat</h3>
+                    <p className="text-xs font-bold text-slate-700 mt-1">
+                      Lembar kerja Cari Kata, Menjodohkan, Quiz pilihan ganda, serta sertifikat prestasi printable.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: MARS DELI SERDANG */}
+            {activeTab === 'mars' && (
+              <div className="bg-white border-4 border-slate-800 rounded-3xl p-6 shadow-[0_8px_0_#1e293b] space-y-6">
+                <div className="flex items-center justify-between flex-wrap gap-2 border-b-4 border-slate-800 pb-4">
+                  <div>
+                    <span className="bg-rose-300 text-slate-900 border-2 border-slate-800 font-extrabold text-xs px-3 py-1 rounded-full uppercase">
+                      Lagu Kebanggaan Daerah
+                    </span>
+                    <h2 className="text-2xl font-black text-slate-900 mt-1">Mars Kabupaten Deli Serdang</h2>
+                  </div>
+                  <button
+                    onClick={() => handleSpeech(LIRIK_MARS.join(' '))}
+                    className="bg-rose-400 hover:bg-rose-500 border-3 border-slate-800 px-4 py-2 rounded-2xl font-black text-xs text-slate-900 shadow-[0_4px_0_#1e293b] flex items-center gap-2"
+                  >
+                    <Icon name="Volume2" className="w-4 h-4" />
+                    <span>Bacakan Semua Lirik</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* VIDEO EMBED PLAYER */}
+                  <div className="space-y-3">
+                    <p className="font-black text-sm text-slate-800">📺 Video Musik Mars Deli Serdang:</p>
+                    <div className="aspect-video w-full rounded-2xl border-4 border-slate-800 overflow-hidden shadow-[0_4px_0_#1e293b] bg-slate-900">
+                      <iframe
+                        className="w-full h-full"
+                        src="https://www.youtube.com/embed/GGJjr2YsTv4"
+                        title="Mars Deli Serdang"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      ></iframe>
+                    </div>
+                    <p className="text-xs font-bold text-slate-500 italic">
+                      *Membutuhkan koneksi internet untuk memuat pemutar video resmi YouTube.
+                    </p>
+                  </div>
+
+                  {/* LIRIK READER INTERAKTIF */}
+                  <div className="bg-amber-50 border-3 border-slate-800 rounded-2xl p-4 max-h-[380px] overflow-y-auto space-y-2">
+                    <p className="font-black text-sm text-slate-900 mb-2 border-b-2 border-slate-400 pb-1">
+                      🎼 Lirik Lengkap Mars Deli Serdang:
+                    </p>
+                    {LIRIK_MARS.map((line, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => line && handleSpeech(line)}
+                        className={`p-2 rounded-xl border-2 transition-all cursor-pointer ${
+                          line.startsWith('[')
+                            ? 'bg-rose-200 border-rose-600 font-black text-rose-900 text-center my-2'
+                            : line === ''
+                            ? 'py-1'
+                            : 'bg-white hover:bg-amber-200 border-slate-700 font-bold text-xs md:text-sm text-slate-800 flex items-center justify-between'
+                        }`}
+                      >
+                        <span>{line}</span>
+                        {line && !line.startsWith('[') && <Icon name="Volume2" className="w-3.5 h-3.5 text-slate-500 shrink-0 ml-2" />}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: PETA 3 ZONA GEOGRAFIS */}
+            {activeTab === 'peta' && (
+              <div className="space-y-6">
+                <div className="bg-white border-4 border-slate-800 rounded-3xl p-6 shadow-[0_8px_0_#1e293b]">
+                  <h2 className="text-2xl font-black text-slate-900">Peta 3 Zona Geografis Deli Serdang</h2>
+                  <p className="text-xs md:text-sm font-bold text-slate-600 mt-1">
+                    Kabupaten Deli Serdang terbagi menjadi 3 zona karakteristik wilayah. Klik zona di bawah untuk mendengarkan penjelasannya!
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
+                    {ZONES_DATA.map((z) => (
+                      <button
+                        key={z.id}
+                        onClick={() => {
+                          playSound('card');
+                          setSelectedZone(z);
+                          handleSpeech(`${z.title}. ${z.desc}`);
+                        }}
+                        className={`p-4 rounded-2xl border-3 border-slate-800 font-black text-left transition-all ${
+                          selectedZone.id === z.id
+                            ? `${z.color} text-slate-900 ${z.shadowColor} -translate-y-1`
+                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200 shadow-sm'
+                        }`}
+                      >
+                        <span className="text-xs bg-white/80 px-2.5 py-0.5 rounded-full border border-slate-800 uppercase block w-fit mb-1">
+                          {z.badge}
+                        </span>
+                        <p className="text-base font-extrabold">{z.title}</p>
+                        <p className="text-xs font-semibold mt-1 opacity-90">{z.areas}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {selectedZone && (
+                  <div className={`${selectedZone.bgLight} border-4 border-slate-800 rounded-3xl p-6 shadow-[0_8px_0_#1e293b] space-y-4`}>
+                    <div className="flex items-center justify-between flex-wrap gap-2 border-b-3 border-slate-800 pb-3">
+                      <div>
+                        <span className="bg-white border-2 border-slate-800 font-black text-xs px-3 py-1 rounded-full text-slate-900">
+                          {selectedZone.badge}
+                        </span>
+                        <h3 className="text-2xl font-black text-slate-900 mt-2">{selectedZone.title}</h3>
+                        <p className="text-xs font-bold text-slate-700">Wilayah: {selectedZone.areas}</p>
+                      </div>
+                      <button
+                        onClick={() => handleSpeech(`${selectedZone.title}. ${selectedZone.desc}. ${selectedZone.facts.join('. ')}`)}
+                        className="bg-amber-300 hover:bg-amber-400 border-3 border-slate-800 px-4 py-2 rounded-2xl font-black text-xs text-slate-900 shadow-[0_4px_0_#1e293b] flex items-center gap-2"
+                      >
+                        <Icon name="Volume2" className="w-4 h-4" />
+                        <span>Dengarkan Deskripsi Zona</span>
+                      </button>
+                    </div>
+
+                    <p className="font-extrabold text-slate-800 text-sm md:text-base leading-relaxed bg-white/80 p-4 rounded-2xl border-2 border-slate-800">
+                      {selectedZone.desc}
+                    </p>
+
+                    <div className="space-y-2">
+                      <h4 className="font-black text-slate-900 text-sm">📌 Fakta Menarik & Sejarah Zona:</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {selectedZone.facts.map((fact, i) => (
+                          <div key={i} className="bg-white p-3 rounded-2xl border-2 border-slate-800 font-bold text-xs text-slate-800 shadow-sm flex items-start gap-2">
+                            <span className="bg-amber-300 text-slate-900 rounded-full w-5 h-5 flex items-center justify-center shrink-0 border border-slate-800 text-xs font-black">
+                              {i + 1}
+                            </span>
+                            <span>{fact}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB 4: KAMUS 3 SUKU */}
+            {activeTab === 'kamus' && (
+              <div className="space-y-6">
+                <div className="bg-white border-4 border-slate-800 rounded-3xl p-6 shadow-[0_8px_0_#1e293b]">
+                  <h2 className="text-2xl font-black text-slate-900">Kamus Sapaan 3 Suku Usul</h2>
+                  <p className="text-xs md:text-sm font-bold text-slate-600 mt-1">
+                    Pelajari sebutan keluarga dan sapaan sehari-hari Suku Melayu Deli, Karo, dan Simalungun. Klik ucapan untuk mendengar suaranya!
+                  </p>
+
+                  <div className="flex items-center gap-2 mt-4">
+                    {[
+                      { id: 'melayu', name: 'Melayu Deli & Serdang', icon: '🌴', color: 'bg-amber-300' },
+                      { id: 'karo', name: 'Suku Karo', icon: '🏔️', color: 'bg-rose-300' },
+                      { id: 'simalungun', name: 'Suku Simalungun', icon: '🌾', color: 'bg-emerald-300' }
+                    ].map((c) => (
+                      <button
+                        key={c.id}
+                        onClick={() => {
+                          playSound('click');
+                          setSelectedCulture(c.id);
+                        }}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl font-black text-xs md:text-sm border-3 border-slate-800 transition-all ${
+                          selectedCulture === c.id
+                            ? `${c.color} text-slate-900 shadow-[0_4px_0_#1e293b] -translate-y-1`
+                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                        }`}
+                      >
+                        <span>{c.icon}</span>
+                        <span>{c.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {DICTIONARY_DATA[selectedCulture] && (
+                  <div className="space-y-6">
+                    {/* CATEGORY 1: SEBUTAN KEKERABATAN KELUARGA */}
+                    <div className="bg-amber-100 border-4 border-slate-800 rounded-3xl p-6 shadow-[0_8px_0_#1e293b]">
+                      <h3 className="text-lg font-black text-slate-900 mb-3 flex items-center gap-2">
+                        <span>👨‍👩‍👧‍👦 Sebutan Kekerabatan / Keluarga ({DICTIONARY_DATA[selectedCulture].cultureName})</span>
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {DICTIONARY_DATA[selectedCulture].family.map((fam, idx) => (
+                          <div
+                            key={idx}
+                            onClick={() => {
+                              playSound('click');
+                              handleSpeech(`${fam.title} dalam bahasa daerah dipanggil ${fam.term}`);
+                            }}
+                            className="bg-white hover:bg-amber-200 border-3 border-slate-800 p-4 rounded-2xl shadow-sm cursor-pointer transition-all hover:-translate-y-0.5 flex flex-col justify-between"
+                          >
+                            <div>
+                              <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-300">
+                                {fam.title}
+                              </span>
+                              <p className="text-lg font-black text-slate-900 mt-1">{fam.term}</p>
+                              <p className="text-xs font-semibold text-slate-600 mt-1">{fam.note}</p>
+                            </div>
+                            <div className="mt-3 text-right">
+                              <span className="text-xs font-bold text-amber-700 flex items-center justify-end gap-1">
+                                <Icon name="Volume2" className="w-3.5 h-3.5" /> Putar Suara
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* CATEGORY 2: SAPAAN RAMAH SEHARI-HARI */}
+                    <div className="bg-emerald-100 border-4 border-slate-800 rounded-3xl p-6 shadow-[0_8px_0_#1e293b]">
+                      <h3 className="text-lg font-black text-slate-900 mb-3 flex items-center gap-2">
+                        <span>💬 Sapaan Ramah Sehari-hari</span>
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {DICTIONARY_DATA[selectedCulture].greetings.map((greet) => (
+                          <div
+                            key={greet.id}
+                            onClick={() => {
+                              playSound('click');
+                              handleSpeech(greet.local);
+                            }}
+                            className="bg-white hover:bg-emerald-200 border-3 border-slate-800 p-4 rounded-2xl shadow-sm cursor-pointer transition-all hover:-translate-y-0.5"
+                          >
+                            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-300">
+                              {greet.phrase}
+                            </span>
+                            <p className="text-base font-black text-slate-900 mt-2">"{greet.local}"</p>
+                            <p className="text-xs font-bold text-slate-600 mt-1">Artinya: {greet.meaning}</p>
+                            <div className="mt-3 text-right">
+                              <span className="text-xs font-bold text-emerald-700 flex items-center justify-end gap-1">
+                                <Icon name="Volume2" className="w-3.5 h-3.5" /> Bunyikan
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB 5: ENSIKLOPEDIA BUDAYA */}
+            {activeTab === 'ensiklopedia' && (
+              <div className="space-y-6">
+                <div className="bg-white border-4 border-slate-800 rounded-3xl p-6 shadow-[0_8px_0_#1e293b]">
+                  <div className="flex flex-col md:flex-row items-md-center justify-between gap-4">
+                    <div>
+                      <h2 className="text-2xl font-black text-slate-900">Ensiklopedia Budaya Lokal</h2>
+                      <p className="text-xs md:text-sm font-bold text-slate-600 mt-1">
+                        Koleksi warisan kuliner, alat musik, dan pakaian adat khas Deli Serdang.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 bg-slate-100 border-2 border-slate-800 px-3 py-2 rounded-2xl w-full md:w-64">
+                      <Icon name="Search" className="w-4 h-4 text-slate-500 shrink-0" />
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Cari budaya..."
+                        className="bg-transparent font-bold text-xs w-full focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-4 overflow-x-auto pb-1">
+                    {[
+                      { id: 'semua', label: 'Semua Kategori' },
+                      { id: 'kuliner', label: '🍲 Kuliner Tradisional' },
+                      { id: 'alat_musik', label: '🎵 Alat Musik' },
+                      { id: 'pakaian_adat', label: '🥋 Pakaian Adat' },
+                      { id: 'tradisi', label: '🎉 Pesta & Tradisi' }
+                    ].map((f) => (
+                      <button
+                        key={f.id}
+                        onClick={() => {
+                          playSound('click');
+                          setEncCategoryFilter(f.id);
+                        }}
+                        className={`px-3 py-1.5 rounded-xl font-extrabold text-xs border-2 border-slate-800 whitespace-nowrap transition-all ${
+                          encCategoryFilter === f.id
+                            ? 'bg-purple-300 text-slate-900 shadow-sm'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredEncyclopedia.map((item) => (
+                    <div
+                      key={item.id}
+                      className="bg-white border-4 border-slate-800 rounded-3xl p-5 shadow-[0_6px_0_#1e293b] flex flex-col justify-between space-y-3"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-4xl">{item.image}</span>
+                          <span className="text-[10px] font-black uppercase bg-purple-100 text-purple-900 px-2.5 py-1 rounded-full border border-purple-400">
+                            {item.origin}
+                          </span>
+                        </div>
+                        <h3 className="text-xl font-black text-slate-900 mt-3">{item.title}</h3>
+                        <p className="text-xs font-black text-purple-700">{item.subtitle}</p>
+                        <p className="text-xs font-bold text-slate-600 mt-2 leading-relaxed">{item.shortDesc}</p>
+                      </div>
+
+                      <div className="pt-2 border-t-2 border-slate-200 flex items-center justify-between">
+                        <button
+                          onClick={() => handleSpeech(`${item.title}. ${item.story}`)}
+                          className="p-2 bg-amber-200 hover:bg-amber-300 border-2 border-slate-800 rounded-xl text-slate-900 font-bold text-xs flex items-center gap-1"
+                          title="Dengar Penjelasan"
+                        >
+                          <Icon name="Volume2" className="w-4 h-4" />
+                          <span>Audio</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            playSound('card');
+                            setSelectedEncyclopedia(item);
+                          }}
+                          className="px-3 py-2 bg-purple-300 hover:bg-purple-400 border-2 border-slate-800 rounded-xl font-black text-xs text-slate-900 shadow-sm"
+                        >
+                          Baca Cerita Modal
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {selectedEncyclopedia && (
+                  <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+                    <div className="bg-white border-4 border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-[0_12px_0_#1e293b] space-y-4 relative animate-in fade-in zoom-in-95">
+                      <button
+                        onClick={() => setSelectedEncyclopedia(null)}
+                        className="absolute top-4 right-4 bg-rose-300 hover:bg-rose-400 border-2 border-slate-800 p-1.5 rounded-xl font-black text-slate-900"
+                      >
+                        <Icon name="XCircle" className="w-6 h-6" />
+                      </button>
+
+                      <div className="flex items-center gap-3">
+                        <span className="text-5xl">{selectedEncyclopedia.image}</span>
+                        <div>
+                          <span className="bg-purple-200 text-purple-900 text-[10px] font-black px-2.5 py-0.5 rounded-full border border-purple-500">
+                            {selectedEncyclopedia.origin}
+                          </span>
+                          <h3 className="text-2xl font-black text-slate-900">{selectedEncyclopedia.title}</h3>
+                        </div>
+                      </div>
+
+                      <p className="text-xs md:text-sm font-bold text-slate-700 bg-amber-50 p-4 rounded-2xl border-2 border-slate-800 leading-relaxed">
+                        {selectedEncyclopedia.story}
+                      </p>
+
+                      <div className="flex justify-end gap-2 pt-2">
+                        <button
+                          onClick={() => handleSpeech(selectedEncyclopedia.story)}
+                          className="bg-amber-300 hover:bg-amber-400 border-2 border-slate-800 px-4 py-2 rounded-xl font-black text-xs text-slate-900 flex items-center gap-1.5"
+                        >
+                          <Icon name="Volume2" className="w-4 h-4" /> Putar Narasi
+                        </button>
+                        <button
+                          onClick={() => setSelectedEncyclopedia(null)}
+                          className="bg-slate-200 hover:bg-slate-300 border-2 border-slate-800 px-4 py-2 rounded-xl font-black text-xs text-slate-900"
+                        >
+                          Tutup
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB 6: LKPD SISWA INTERAKTIF */}
+            {activeTab === 'lkpd' && (
+              <div className="space-y-6">
+                <div className="bg-white border-4 border-slate-800 rounded-3xl p-6 shadow-[0_8px_0_#1e293b]">
+                  <h2 className="text-2xl font-black text-slate-900">Lembar Kerja Peserta Didik (LKPD) Interaktif</h2>
+                  <p className="text-xs md:text-sm font-bold text-slate-600 mt-1">
+                    Selesaikan 3 tugas di bawah ini untuk menguji pemahaman budaya lokal Deli Serdang!
+                  </p>
+                </div>
+
+                {/* BAGIAN A: MENJODOHKAN SALAM DENGAN SUKU */}
+                <div className="bg-orange-100 border-4 border-slate-800 rounded-3xl p-6 shadow-[0_8px_0_#1e293b] space-y-4">
+                  <h3 className="text-lg font-black text-slate-900 border-b-2 border-orange-300 pb-2">
+                    Bagian A: Menjodohkan Salam dengan Suku Origin
+                  </h3>
+                  <p className="text-xs font-bold text-slate-700">
+                    Pilih salah satu ucapan salam di kolom kiri, lalu klik pilihan Suku yang sesuai di kolom kanan!
+                  </p>
+
+                  {matchingFeedback && (
+                    <div className="bg-amber-200 border-2 border-slate-800 p-2.5 rounded-xl font-black text-xs text-slate-900 text-center">
+                      {matchingFeedback}
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <p className="font-black text-xs text-slate-800 uppercase">1. Pilihan Ucapan Salam:</p>
+                      {LKPD_MATCHING.map((item) => {
+                        const isSelected = selectedMatchingItem?.id === item.id;
+                        const isMatched = matchingAnswers[item.id];
+                        return (
+                          <button
+                            key={item.id}
+                            onClick={() => handleMatchingSelect(item)}
+                            disabled={!!isMatched}
+                            className={`w-full p-3 rounded-2xl border-3 border-slate-800 font-extrabold text-xs text-left transition-all flex items-center justify-between ${
+                              isMatched
+                                ? 'bg-emerald-300 text-slate-900 opacity-80'
+                                : isSelected
+                                ? 'bg-amber-300 shadow-[0_4px_0_#1e293b] -translate-y-0.5'
+                                : 'bg-white hover:bg-orange-200'
+                            }`}
+                          >
+                            <span>"{item.greeting}"</span>
+                            {isMatched ? (
+                              <span className="bg-emerald-800 text-white px-2 py-0.5 rounded-lg text-[10px] font-black uppercase">
+                                ✓ {isMatched}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-slate-500">Klik Pilih</span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="space-y-2">
+                      <p className="font-black text-xs text-slate-800 uppercase">2. Target Suku Kebudayaan:</p>
+                      {['Melayu', 'Karo', 'Simalungun'].map((suku) => (
+                        <button
+                          key={suku}
+                          onClick={() => handleMatchingTarget(suku)}
+                          disabled={!selectedMatchingItem}
+                          className="w-full p-4 rounded-2xl border-3 border-slate-800 font-black text-sm bg-white hover:bg-orange-300 active:bg-orange-400 text-slate-900 shadow-[0_4px_0_#1e293b] disabled:opacity-50 transition-all text-center"
+                        >
+                          Suku {suku}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* BAGIAN B: CARI KATA (WORD SEARCH 8x8) */}
+                <div className="bg-cyan-100 border-4 border-slate-800 rounded-3xl p-6 shadow-[0_8px_0_#1e293b] space-y-4">
+                  <div className="flex items-center justify-between flex-wrap gap-2 border-b-2 border-cyan-300 pb-2">
+                    <h3 className="text-lg font-black text-slate-900">
+                      Bagian B: Cari Kata Budaya (Word Search 8x8)
+                    </h3>
+                    <span className="bg-white border-2 border-slate-800 px-3 py-1 rounded-full text-xs font-black text-slate-900">
+                      Ditemukan: {foundWords.length} / {TARGET_WORDS.length}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                    <div className="bg-white p-3 rounded-2xl border-3 border-slate-800 shadow-md max-w-xs mx-auto">
+                      <div className="grid grid-cols-8 gap-1">
+                        {WORD_SEARCH_GRID.map((row, rIdx) =>
+                          row.map((char, cIdx) => {
+                            const cellKey = `${rIdx}-${cIdx}`;
+                            const isSelected = selectedCells.includes(cellKey);
+                            return (
+                              <button
+                                key={cellKey}
+                                onClick={() => handleCellClick(rIdx, cIdx)}
+                                className={`w-7 h-7 md:w-8 md:h-8 rounded-lg font-black text-xs md:text-sm border-2 border-slate-800 transition-all flex items-center justify-center ${
+                                  isSelected
+                                    ? 'bg-amber-300 text-slate-900 scale-105 shadow-xs'
+                                    : 'bg-slate-100 hover:bg-cyan-200 text-slate-800'
+                                }`}
+                              >
+                                {char}
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <p className="font-black text-xs text-slate-800">Daftar Kata Yang Harus Ditemukan:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {TARGET_WORDS.map((word) => {
+                          const isFound = foundWords.includes(word);
+                          return (
+                            <span
+                              key={word}
+                              className={`px-3 py-1.5 rounded-xl font-black text-xs border-2 border-slate-800 transition-all ${
+                                isFound
+                                  ? 'bg-emerald-400 text-slate-900 line-through'
+                                  : 'bg-white text-slate-700'
+                              }`}
+                            >
+                              {word} {isFound && '✓'}
+                            </span>
+                          );
+                        })}
+                      </div>
+                      <button
+                        onClick={() => setSelectedCells([])}
+                        className="bg-slate-200 hover:bg-slate-300 border-2 border-slate-800 px-3 py-1.5 rounded-xl font-extrabold text-xs text-slate-800"
+                      >
+                        Bersihkan Pilihan Huruf
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* BAGIAN C: QUIZ PILIHAN GANDA (5 SOAL) */}
+                <div className="bg-emerald-100 border-4 border-slate-800 rounded-3xl p-6 shadow-[0_8px_0_#1e293b] space-y-4">
+                  <div className="flex items-center justify-between border-b-2 border-emerald-300 pb-2">
+                    <h3 className="text-lg font-black text-slate-900">
+                      Bagian C: Quiz Evaluasi Pilihan Ganda
+                    </h3>
+                    {quizScore !== null && (
+                      <span className="bg-amber-300 border-2 border-slate-800 px-3 py-1 rounded-full text-xs font-black text-slate-900">
+                        Nilai Quiz: {quizScore} / 100
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-4">
+                    {LKPD_QUIZ.map((q, qIdx) => (
+                      <div key={qIdx} className="bg-white p-4 rounded-2xl border-3 border-slate-800 space-y-2">
+                        <p className="font-black text-sm text-slate-900">{q.q}</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {q.options.map((opt, oIdx) => {
+                            const isSelected = quizAnswers[qIdx] === oIdx;
+                            return (
+                              <button
+                                key={oIdx}
+                                onClick={() => {
+                                  playSound('click');
+                                  setQuizAnswers({ ...quizAnswers, [qIdx]: oIdx });
+                                }}
+                                className={`p-2.5 rounded-xl border-2 border-slate-800 font-extrabold text-xs text-left transition-all ${
+                                  isSelected
+                                    ? 'bg-amber-300 text-slate-900 shadow-sm'
+                                    : 'bg-slate-50 hover:bg-emerald-200 text-slate-800'
+                                }`}
+                              >
+                                {String.fromCharCode(65 + oIdx)}. {opt}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+
+                    <button
+                      onClick={handleQuizSubmit}
+                      className="w-full bg-emerald-400 hover:bg-emerald-500 border-3 border-slate-800 py-3 rounded-2xl font-black text-sm text-slate-900 shadow-[0_4px_0_#1e293b] active:translate-y-1 active:shadow-none"
+                    >
+                      Hitung Nilai Evaluasi LKPD
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 7: ARENA GAMES */}
+            {activeTab === 'games' && (
+              <div className="space-y-6">
+                <div className="bg-white border-4 border-slate-800 rounded-3xl p-6 shadow-[0_8px_0_#1e293b]">
+                  <h2 className="text-2xl font-black text-slate-900">Arena Games Budaya Ceria</h2>
+                  <p className="text-xs md:text-sm font-bold text-slate-600 mt-1">
+                    Pilih gim interaktif favoritmu dan kumpulkan poin prestasi!
+                  </p>
+                </div>
+
+                {/* GIM 1: PETUALANGAN DADU TRIVIA 10-PETAK */}
+                <div className="bg-indigo-100 border-4 border-slate-800 rounded-3xl p-6 shadow-[0_8px_0_#1e293b] space-y-4">
+                  <div className="flex items-center justify-between border-b-2 border-indigo-300 pb-2">
+                    <div>
+                      <span className="bg-indigo-300 text-slate-900 border border-slate-800 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase">
+                        Game Mode 1
+                      </span>
+                      <h3 className="text-lg font-black text-slate-900 mt-1">🎲 Petualangan Dadu 10-Petak</h3>
+                    </div>
+                    <button
+                      onClick={handleRollDice}
+                      disabled={isRolling}
+                      className="bg-indigo-400 hover:bg-indigo-500 border-3 border-slate-800 px-5 py-2.5 rounded-2xl font-black text-xs text-slate-900 shadow-[0_4px_0_#1e293b] active:translate-y-1 active:shadow-none disabled:opacity-50"
+                    >
+                      {isRolling ? 'Kocok Dadu...' : `Putar Dadu (Angka: ${diceVal})`}
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                    {DICE_GAME_TILES_10.map((tile) => {
+                      const isPlayerHere = dicePos === tile.id;
+                      return (
+                        <div
+                          key={tile.id}
+                          className={`p-3 rounded-2xl border-3 border-slate-800 text-center transition-all flex flex-col justify-between ${
+                            isPlayerHere
+                              ? 'bg-amber-300 shadow-[0_4px_0_#1e293b] -translate-y-1'
+                              : 'bg-white'
+                          }`}
+                        >
+                          <div>
+                            <p className="font-black text-xs text-slate-900">Petak {tile.id}</p>
+                            <p className="text-[10px] font-bold text-slate-600 mt-0.5 truncate">{tile.title.split(':')[1]}</p>
+                          </div>
+                          {isPlayerHere && <div className="mt-2 text-xl animate-bounce">🏃🏻‍♂️</div>}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {activeTrivia && (
+                    <div className="bg-white p-4 rounded-2xl border-3 border-slate-800 space-y-3 animate-in fade-in">
+                      <p className="font-black text-sm text-slate-900">❓ {activeTrivia.question}</p>
+                      <div className="flex gap-2">
+                        {activeTrivia.options.map((opt, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => handleAnswerTrivia(idx)}
+                            className="flex-1 bg-amber-200 hover:bg-amber-300 border-2 border-slate-800 py-2 rounded-xl font-black text-xs text-slate-900"
+                          >
+                            {opt}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* GIM 2: ULAR TANGGA BUDAYA 2-PEMAIN (25 PETAK) */}
+                <div className="bg-amber-100 border-4 border-slate-800 rounded-3xl p-6 shadow-[0_8px_0_#1e293b] space-y-4">
+                  <div className="flex items-center justify-between flex-wrap gap-2 border-b-2 border-amber-300 pb-2">
+                    <div>
+                      <span className="bg-amber-300 text-slate-900 border border-slate-800 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase">
+                        Game Mode 2
+                      </span>
+                      <h3 className="text-lg font-black text-slate-900 mt-1">
+                        🐍 Ular Tangga Budaya (Si Deli vs Si Serdang)
+                      </h3>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleRollSnake}
+                        className="bg-emerald-400 hover:bg-emerald-500 border-3 border-slate-800 px-4 py-2 rounded-2xl font-black text-xs text-slate-900 shadow-[0_4px_0_#1e293b] active:translate-y-1 active:shadow-none"
+                      >
+                        Kocok Dadu (Giliran: Pemain {turn})
+                      </button>
+                      <button
+                        onClick={resetSnakeGame}
+                        className="p-2 bg-slate-200 hover:bg-slate-300 border-2 border-slate-800 rounded-xl"
+                        title="Reset Permainan"
+                      >
+                        <Icon name="RotateCcw" className="w-4 h-4 text-slate-800" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-3 rounded-2xl border-2 border-slate-800 font-bold text-xs text-slate-800 text-center">
+                    📢 Log Permainan: {snakeLog}
+                  </div>
+
+                  <div className="bg-white p-3 rounded-2xl border-3 border-slate-800 max-w-md mx-auto">
+                    <div className="grid grid-cols-5 gap-1.5">
+                      {Array.from({ length: 25 }, (_, i) => 25 - i).map((tileNum) => {
+                        const hasP1 = p1Pos === tileNum;
+                        const hasP2 = p2Pos === tileNum;
+
+                        const isLadder = tileNum === 3 || tileNum === 8 || tileNum === 15;
+                        const isSnake = tileNum === 14 || tileNum === 19 || tileNum === 24;
+
+                        return (
+                          <div
+                            key={tileNum}
+                            className={`aspect-square rounded-xl border-2 border-slate-800 p-1 flex flex-col justify-between items-center relative text-center ${
+                              tileNum === 25
+                                ? 'bg-amber-300 font-black'
+                                : isLadder
+                                ? 'bg-emerald-200'
+                                : isSnake
+                                ? 'bg-rose-200'
+                                : 'bg-slate-50'
+                            }`}
+                          >
+                            <span className="text-[10px] font-black text-slate-600 self-start">{tileNum}</span>
+
+                            {isLadder && <span className="text-xs" title="Tangga Naik">🪜</span>}
+                            {isSnake && <span className="text-xs" title="Ular Turun">🐍</span>}
+
+                            <div className="flex items-center justify-center gap-0.5 my-auto">
+                              {hasP1 && <span className="text-base bg-cyan-300 border border-slate-800 rounded-full px-1" title="Si Deli">👦🏻</span>}
+                              {hasP2 && <span className="text-base bg-amber-300 border border-slate-800 rounded-full px-1" title="Si Serdang">👧🏽</span>}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 8: SERTIFIKAT DUTA BUDAYA CILIK (READY PRINT) */}
+            {activeTab === 'rapor' && (
+              <div className="space-y-6">
+                <div className="bg-white border-4 border-slate-800 rounded-3xl p-6 shadow-[0_8px_0_#1e293b] flex items-center justify-between flex-wrap gap-3 print:hidden">
+                  <div>
+                    <h2 className="text-2xl font-black text-slate-900">Sertifikat Duta Budaya Cilik</h2>
+                    <p className="text-xs md:text-sm font-bold text-slate-600 mt-1">
+                      Bukti kelulusan membaca Smart Book Budaya Lokal Deli Serdang.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      playSound('click');
+                      window.print();
+                    }}
+                    className="bg-yellow-400 hover:bg-yellow-500 border-3 border-slate-800 px-5 py-2.5 rounded-2xl font-black text-xs text-slate-900 shadow-[0_4px_0_#1e293b] flex items-center gap-2 active:translate-y-1 active:shadow-none"
+                  >
+                    <Icon name="Printer" className="w-4 h-4" />
+                    <span>Cetak / Print Sertifikat</span>
+                  </button>
+                </div>
+
+                {/* PRINTABLE CERTIFICATE CARD */}
+                <div className="bg-gradient-to-br from-amber-100 via-orange-50 to-yellow-100 border-8 border-amber-600 p-8 md:p-12 rounded-3xl shadow-xl max-w-3xl mx-auto text-center space-y-6 relative overflow-hidden print:border-4 print:p-6 print:shadow-none">
+                  <div className="absolute top-4 left-4 w-12 h-12 border-t-4 border-l-4 border-amber-800"></div>
+                  <div className="absolute top-4 right-4 w-12 h-12 border-t-4 border-r-4 border-amber-800"></div>
+                  <div className="absolute bottom-4 left-4 w-12 h-12 border-b-4 border-l-4 border-amber-800"></div>
+                  <div className="absolute bottom-4 right-4 w-12 h-12 border-b-4 border-r-4 border-amber-800"></div>
+
+                  <div className="inline-block bg-amber-400 text-slate-900 px-4 py-1 rounded-full border-2 border-slate-800 font-black text-xs uppercase tracking-widest">
+                    Sertifikat Penghargaan Resmi
+                  </div>
+
+                  <h2 className="text-3xl md:text-5xl font-black text-slate-900 font-serif tracking-tight">
+                    DUTA BUDAYA CILIK
+                  </h2>
+                  <p className="text-xs md:text-sm font-bold text-slate-700">
+                    Diberikan secara terhormat kepada siswa berprestasi:
+                  </p>
+
+                  <div className="py-2 border-b-4 border-slate-800 inline-block px-8">
+                    <h3 className="text-2xl md:text-4xl font-black text-slate-900 underline decoration-amber-500 decoration-wavy">
+                      {studentName || 'Nama Siswa'}
+                    </h3>
+                  </div>
+
+                  <p className="text-xs md:text-sm font-bold text-slate-800 max-w-lg mx-auto leading-relaxed">
+                    Telah menyelesaikan seluruh modul pembelajaran, tantangan Kamus 3 Suku, Evaluasi LKPD, dan Arena Games pada <span className="font-extrabold text-amber-900">Smart Book Budaya Lokal Deli Serdang</span> dengan Predikat Kelulusan Sangat Baik.
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-4 max-w-md mx-auto bg-white/80 p-4 rounded-2xl border-2 border-slate-800 text-left">
+                    <div>
+                      <p className="text-[10px] font-black text-slate-500 uppercase">Sekolah / Asal:</p>
+                      <p className="font-extrabold text-xs text-slate-900">{schoolName}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-slate-500 uppercase">Kelas & Poin:</p>
+                      <p className="font-extrabold text-xs text-slate-900">{studentClass} ({score} Poin)</p>
+                    </div>
+                  </div>
+
+                  {/* ELEMEN TANDA TANGAN SERTIFIKAT (READY PRINT) */}
+                  <div className="mt-8 pt-6 border-t-2 border-dashed border-amber-300 grid grid-cols-2 gap-8 text-center">
+                    <div className="flex flex-col items-center justify-between h-32">
+                      <p className="text-xs font-bold text-slate-700">
+                        Mengetahui,<br />Guru / Wali Kelas
+                      </p>
+                      <div className="w-36 border-b-2 border-slate-800 pb-1">
+                      </div>
+                      <p className="text-xs font-black text-slate-900">
+                        ( .................................... )
+                      </p>
+                      <p className="text-[10px] text-slate-500 font-semibold">NIP. ....................................</p>
+                    </div>
+
+                    <div className="flex flex-col items-center justify-between h-32">
+                      <p className="text-xs font-bold text-slate-700">
+                        Deli Serdang, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}<br />Kepala Sekolah
+                      </p>
+                      <div className="w-36 border-b-2 border-slate-800 pb-1">
+                      </div>
+                      <p className="text-xs font-black text-slate-900">
+                        ( .................................... )
+                      </p>
+                      <p className="text-[10px] text-slate-500 font-semibold">NIP. ....................................</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </main>
+        </div>
+      );
+    }
+
+    // Render App Component
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "name": "Smart Book Budaya Lokal Deli Serdang",
+  "description": "Buku digital interaktif kearifan lokal Deli Serdang: Seni Tari & Busana Adat 3 Suku (Melayu, Karo, Simalungun), Kamus Sapaan, Peta 3 Zona Geografis, Mars Deli Serdang, Ensiklopedia Budaya, LKPD Interaktif, Gim Dadu & Ular Tangga, serta Sertifikat Duta Budaya Cilik.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
